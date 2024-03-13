@@ -2,6 +2,10 @@
 	"folders": [
 		{
 			"path": ".."
+		},
+		{
+			"name": "240313-212905-arduino-uno-r4-led-animation",
+			"path": "C:/Users/Aman/Documents/PlatformIO/Projects/240313-212905-arduino-uno-r4-led-animation"
 		}
 	],
 	"settings": {}
