@@ -1,0 +1,8 @@
+{
+    "board": "arduino:renesas_uno:unor4wifi",
+    "port": "COM3",
+    "programmer": "rfp",
+    "sketch": "Arduino\\heart.ino",
+    "output": "../build",
+    "intelliSenseGen": "global"
+}
