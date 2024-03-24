@@ -9,6 +9,7 @@ DHT dht(DHTPin, DHTTYPE);
 float Temperature;
 float Humidity;
 float Temp_Fahrenheit;
+int rain;
 
 int sensorPinA=A0;
 int sensorPinD=4;
@@ -377,6 +378,7 @@ const uint32_t frames[][4] = {
     pinMode(sensorPinD,INPUT);
     pinMode(DHTPin, INPUT);
     pinMode(sensorPinA,INPUT);
+    pinMode(rain,INPUT);
     dht.begin();
     delay(100);
     matrix.loadSequence(frames);
@@ -387,11 +389,25 @@ const uint32_t frames[][4] = {
     pinMode(LED_BUILTIN, OUTPUT);
   }
 void loop(){
+
+  value = analogRead(rain);
+  Serial.println(value);
+  value = map(value,0,1023,225,0);
+  Serial.println(value);
+  if(value>=set){
+  Serial.println("Rain detected.");
+  digitalWrite(LED_BUILTIN, HIGH);
+  }
+ else{
+  digitalWrite(LED_BUILTIN, LOW);
+ }
+
   Humidity = dht.readHumidity();
   Temperature = dht.readTemperature();
   Temp_Fahrenheit = dht.readTemperature(true);
+  float hic = dht.computeHeatIndex(Temperature, Humidity, false);
   if (isnan(Humidity) || isnan(Temperature) || isnan(Temp_Fahrenheit)) {
-    Serial.println(F("Failed to fetch data from DHT Sensor"));
+    Serial.println(F("Unable to find DHT Sensor. Check Connection!"));
     return;
   }
   Serial.print(F("Humidity: "));
@@ -400,7 +416,9 @@ void loop(){
   Serial.print(Temperature);
   Serial.print(F("°C | "));
   Serial.print(Temp_Fahrenheit);
-  Serial.println(F("°F "));
+  Serial.print(F("°F Heat index: "));
+  Serial.print(hic);
+  Serial.println(F("°C "));
 
   sensorDataD = digitalRead(sensorPinD); 
   sensorDataA = analogRead(sensorPinA);
@@ -411,7 +429,7 @@ void loop(){
   else
     digitalWrite(13, LOW);
   Serial.print(F("Air Quality Index: "));
-  Serial.print("Analog: ");
+  //Serial.print("Analog: ");
   Serial.print(sensorDataA, DEC);
     Serial.print(" PPM");
   if(sensorDataA < 500){
@@ -419,7 +437,7 @@ void loop(){
     } else if(sensorDataA > 500 && sensorDataA <= 1000){
       Serial.println(", Poor Air");
     } else if(sensorDataA > 1000){
-      Serial.println(", Very Poor"); 
+      Serial.println(", Very Poor Air"); 
       }
  // Serial.print("Digital: ");
  // Serial.print(sensorDataD, DEC);               
