@@ -1,24 +1,24 @@
 #include <Wire.h>
+#include "Arduino_LED_Matrix.h"
+#include <stdint.h>
 #include "DHT.h"
 #define DHTTYPE DHT22
 
-unsigned long delayTime;
-uint8_t DHTPin = 2;
+unsigned long delayTime = 2500;
+
 DHT dht(DHTPin, DHTTYPE);
 
-float Temperature;
-float Humidity;
-float Temp_Fahrenheit;
-int rain;
-
+int DHTPin = 2;
 int sensorPinA=A0;
 int sensorPinD=4;
 int sensorDataD;
 int sensorDataA;
 int rainpin=A2;
 
-#include "Arduino_LED_Matrix.h"
-#include <stdint.h>
+int rain;
+float Humidity;
+float Temperature;
+float Temp_Fahrenheit;
 
 ArduinoLEDMatrix matrix;
 
@@ -373,43 +373,72 @@ const uint32_t frames[][4] = {
   }
 };
 
-  void setup() {
-    Serial.begin(115200);
-    pinMode(sensorPinD,INPUT);
-    pinMode(DHTPin, INPUT);
-    pinMode(sensorPinA,INPUT);
-    pinMode(rain,INPUT);
-    dht.begin();
-    delay(100);
-    matrix.loadSequence(frames);
-    matrix.begin();
-    // turn on autoscroll to avoid calling next() to show the next frame; the parameter is in milliseconds
-    matrix.autoscroll(300);
-    matrix.play(true);
-    pinMode(LED_BUILTIN, OUTPUT);
-  }
-void loop(){
 
-  value = analogRead(rain);
-  Serial.println(value);
-  value = map(value,0,1023,225,0);
-  Serial.println(value);
-  if(value>=set){
-  Serial.println("Rain detected.");
-  digitalWrite(LED_BUILTIN, HIGH);
+bool checkForRain() {
+  int rainSensorValue = analogRead(rainpin);
+  int rainThreshold = 500;
+  return rainSensorValue > rainThreshold;
+}
+
+// Function to read air quality index
+int readAirQualityIndex() {
+  int sensorDataA = analogRead(sensorPinA);
+  digitalWrite(13, sensorDataA > 400 ? HIGH : LOW);
+  return sensorDataA;
+}
+
+// Function to display air quality information
+void displayAirQuality(int airQualityIndex) {
+  Serial.print(F("Air Quality Index: "));
+  Serial.print(airQualityIndex, DEC);
+  Serial.print(" PPM");
+  if (airQualityIndex < 500) {
+    Serial.println(", Fresh Air");
+  } else if (airQualityIndex > 500 && airQualityIndex <= 1000) {
+    Serial.println(", Poor Air");
+  } else if (airQualityIndex > 1000) {
+    Serial.println(", Very Poor Air");
   }
- else{
-  digitalWrite(LED_BUILTIN, LOW);
- }
+}
+
+// Function to check for gas leak 
+bool checkForGasLeak() {
+  return digitalRead(sensorPinD) == LOW;
+}
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(sensorPinD, INPUT);
+  pinMode(DHTPin, INPUT);
+  pinMode(sensorPinA, INPUT);
+  pinMode(rainpin, INPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
+  dht.begin();
+  delay(100);
+  matrix.loadSequence(frames);
+  matrix.begin();
+  matrix.autoscroll(300);
+  matrix.play(true);
+}
+
+void loop() {
+  if (checkForRain()) {
+    Serial.println("Rain detected.");
+    digitalWrite(LED_BUILTIN, HIGH);
+  } else {
+    digitalWrite(LED_BUILTIN, LOW);
+  }
 
   Humidity = dht.readHumidity();
   Temperature = dht.readTemperature();
   Temp_Fahrenheit = dht.readTemperature(true);
   float hic = dht.computeHeatIndex(Temperature, Humidity, false);
+
   if (isnan(Humidity) || isnan(Temperature) || isnan(Temp_Fahrenheit)) {
     Serial.println(F("Unable to find DHT Sensor. Check Connection!"));
     return;
   }
+
   Serial.print(F("Humidity: "));
   Serial.print(Humidity);
   Serial.print(F("%  Temperature: "));
@@ -420,38 +449,17 @@ void loop(){
   Serial.print(hic);
   Serial.println(F("°C "));
 
-  sensorDataD = digitalRead(sensorPinD); 
-  sensorDataA = analogRead(sensorPinA);
-  if (sensorDataA > 400)
-  {
-    digitalWrite(13, HIGH);
-  }
-  else
-    digitalWrite(13, LOW);
-  Serial.print(F("Air Quality Index: "));
-  //Serial.print("Analog: ");
-  Serial.print(sensorDataA, DEC);
-    Serial.print(" PPM");
-  if(sensorDataA < 500){
-    Serial.println(", Fresh Air");
-    } else if(sensorDataA > 500 && sensorDataA <= 1000){
-      Serial.println(", Poor Air");
-    } else if(sensorDataA > 1000){
-      Serial.println(", Very Poor Air"); 
-      }
- // Serial.print("Digital: ");
- // Serial.print(sensorDataD, DEC);               
-if(digitalRead(sensorPinD)==LOW)
-  {
+  int airQualityIndex = readAirQualityIndex();
+  displayAirQuality(airQualityIndex);
+
+  if (checkForGasLeak()) {
     Serial.println("Gas Leak Found");
     Serial.print("AD: ");
-    Serial.print(sensorDataA*3.3/1024);
+    Serial.print(airQualityIndex * 3.3 / 1024);
     Serial.println(" V");
-  }
-  else
-  {
+  } else {
     Serial.println("No Gas Leakage");
-    //Serial.println(sensorDataA*3.3/1024);
   }
-  delay(2500);
+
+  delay(delayTime);
 }
