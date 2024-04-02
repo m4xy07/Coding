@@ -401,7 +401,7 @@ void setup() {
 
 // Initialize ST7735 display
   //display.initR(INITR_BLACKTAB);
-  display.initR(INITR_GREENTAB);
+  display.initR(INITR_BLACKTAB);
   display.setRotation(3);
 
   dht.begin();
@@ -432,7 +432,6 @@ void loop() {
 
  // Clear the display
   display.fillScreen(ST7735_BLACK);
- // display.invertDisplay(true);
 
  /* Serial.print(F("Humidity: "));
   Serial.print(Humidity);
