@@ -29,7 +29,7 @@ float hic;
 // ST7735 display settings
 const int TFT_CS = 10;
 const int TFT_DC = 9;
-const int TFT_RST = -1;
+const int TFT_RST = 8;
 Adafruit_ST7735 display = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST); //SPI
 
 #define TFT_MOSI 11  // Data out
