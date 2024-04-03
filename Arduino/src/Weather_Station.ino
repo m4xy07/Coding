@@ -11,6 +11,7 @@
 
 unsigned long delayTime = 2500;
 
+//int buzzerpin = 7;
 int DHTPin = 2;
 int sensorPinA = A0;
 int sensorPinD = 4;
@@ -393,6 +394,7 @@ void displaySensorData() {
 
 void setup() {
   Serial.begin(9600);
+  //pinMode(buzzerpin, OUTPUT);
   pinMode(sensorPinD, INPUT);
   pinMode(DHTPin, INPUT);
   pinMode(sensorPinA, INPUT);
@@ -401,7 +403,7 @@ void setup() {
 
 // Initialize ST7735 display
   //display.initR(INITR_BLACKTAB);
-  display.initR(INITR_GREENTAB);
+  display.initR(INITR_BLACKTAB);
   display.setRotation(3);
 
   dht.begin();
@@ -413,6 +415,12 @@ void setup() {
 }
 
 void loop() {
+
+  /*tone(buzzerpin, 1000);
+  delay(1000);       
+  noTone(buzzerpin);     
+  delay(1000); */
+  
   if (checkForRain()) {
     Serial.println("Rain detected.");
     digitalWrite(LED_BUILTIN, HIGH);
@@ -432,7 +440,6 @@ void loop() {
 
  // Clear the display
   display.fillScreen(ST7735_BLACK);
- // display.invertDisplay(true);
 
  /* Serial.print(F("Humidity: "));
   Serial.print(Humidity);
